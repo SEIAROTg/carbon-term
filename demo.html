@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>carbon-terminal (cterm) demo</title>
+		<script type="text/javascript" src="cterm.js"></script>
+		<link rel="stylesheet" type="text/css" href="cterm.css" />
+	</head>
+	<body>
+		<div id="terminal" style="position:fixed;top:0;left:0;right:0;bottom:0"></div>
+		<script>
+			function delayEach(text, delay, cb, next) {
+				cb(text.charAt(0));
+				if (text == '' && next) {
+					next()
+				} else {
+					window.setTimeout(function() {
+						delayEach(text.substr(1), delay, cb, next);
+					}, delay);
+				}
+			}
+			function randomColor(light) {
+				var add = light ? 0x80: 0;
+				var r = parseInt(Math.random() * 0x80 + add);
+				var g = parseInt(Math.random() * 0x80 + add);
+				var b = parseInt(Math.random() * 0x80 + add);
+				return 'rgb(' + r + ',' + g + ',' + b + ')';
+			}
+			function enterReport(text) {
+				if (text === '') {
+					terminal.write('You have not entered anything.\n');
+				} else {
+					terminal.write('You have entered: ');
+					terminal.write(text);
+					terminal.write('\n');
+				}
+			}
+			terminal = new cterm(document.getElementById('terminal'));
+			terminal.focus();
+			var delay = 50;
+			step0();
+			function step0() {
+				delayEach('Hello, welcome to try carbon-terminal, a web based terminal!\n\Let\'s see the features.\n\n', delay, terminal.write, step1);
+			}
+			function step1() {
+				delayEach('\n0. Colored text support\n', delay, terminal.write, step2);				
+			}
+			function step2() {
+				terminal.write('    ');
+				delayEach('You can write colorful text here, just like this.\n', delay, function(c) {
+					terminal.write(c, randomColor(true));
+				}, step3);
+			}
+			function step3() {
+				terminal.write('    ');
+				delayEach('Background color can be changed as well.', delay, function(c) {
+					terminal.write(c, randomColor(false), randomColor(true));
+				}, step4);
+			}
+			function step4() {
+				terminal.write('\n');
+				var bg_color = randomColor(false);
+				terminal.write('    ', null, bg_color);
+				delayEach('If you want, you can also change the color of the whole line.\n', delay, function(c) {
+					terminal.write(c, randomColor(true), bg_color);
+				}, step5);
+			}
+			function step5() {
+				delayEach('\n1. Powerful reading function\n', delay, terminal.write, step6);
+			}
+			function step6() {
+				terminal.write('    ');
+				delayEach('Now you have entered reading mode. Try typing something and then press Enter.\nInput method editor is enable here.\n', delay, terminal.write, step7);
+			}
+			function step7() {
+				terminal.write('demo> ');
+				terminal.read(step8);
+			}
+			function step8(text) {
+				enterReport(text);
+				terminal.write('\n');
+				delayEach('Input method editor is now disabled. Try typing something.\n', delay, terminal.write, step9);
+			}
+			function step9() {
+				terminal.write('demo> ');
+				terminal.read(step10, null, null, false);
+			}
+			function step10(text) {
+				enterReport(text);
+				terminal.write('\n');
+				delayEach('You can set time out for reading. Try typing something in 5 seconds.\n', delay, terminal.write, step11);
+			}
+			function step11() {
+				terminal.write('demo> ');
+				terminal.read(step12, 5000, step12);
+			}
+			function step12(text) {
+				if (text === undefined) {
+					terminal.setMode(2);
+					terminal.write('\nTimed out.\n');
+				} else {
+					enterReport(text);
+				}
+				terminal.write('\n');
+				delayEach('Invisible input is also supported. Try typing something: ', delay, terminal.write, step13);
+			}
+			function step13() {
+				terminal.read(step14, null, null, false, true);
+			}
+			function step14(text) {
+				delayEach('I wish this is not your real password because it might be shown soon. If it unfortunately is, press N later. Now, please answer my question: do you want to show what you just typed? (Y/N): ', delay / 5, terminal.write, function() { step15(text) });
+			}
+			function step15(text) {
+				terminal.readKey(function(key) { step16(key, text) }, null, null);
+			}
+			function step16(key, text) {
+				charKey = String.fromCharCode(key);
+				if (charKey == 'Y' || charKey == 'y') {
+					terminal.write('\n')
+					enterReport(text);
+				} else if (charKey == 'N' || charKey == 'n') {
+					terminal.write('\nNothing here.\n');
+				} else {
+					step15(text);
+					return false;
+				}
+				terminal.write('\n');
+				delayEach('As you can see, reading a key is also supported.\n\n\nNow, there have already been a lot of thing on your screen. But, let me produce more things...\n', delay, terminal.write, step17);
+			}
+			function step17() {
+				for (var i = 0; i < 200; ++i) {
+					terminal.write('Thing\n');
+				}
+				terminal.write('\n\n');
+				delayEach('Hmmm, there are really a lot of things produced. Behaving like terminal, it automatically scrolls to the bottom.\n', delay, terminal.write, step18);
+			}
+			function step18() {
+				delayEach('\nWell, that\' all.\n', delay, terminal.write);
+			}
+		</script>
+	</body>
+</html>
